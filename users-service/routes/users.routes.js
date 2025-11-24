@@ -4,7 +4,7 @@ const router = express.Router();
 
 // Controller functions
 const auth_controller = require('../controllers/auth.controller.js');
-const user_controller = require('../controllers/users.controller.js')
+const user_controller = require('../controllers/users.controller.js');
 
 router.get("/users", auth_controller.authenticateToken, auth_controller.authorizeRole("admin"), user_controller.getAllUsers);
 router.get("/users/:id", auth_controller.authenticateToken, user_controller.getUserById);
