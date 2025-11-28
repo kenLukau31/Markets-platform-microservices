@@ -2,24 +2,27 @@ const swaggerAutogen = require("swagger-autogen")();
 
 const doc = { 
     info: { 
-        title: "Users Service API", 
-        description: "Swagger documentation for Users Microservice", 
+        title: "Notifications Service API", 
+        description: "Swagger documentation for Notifications Microservice", 
     }, 
-    host: "localhost:3000", 
+    host: "localhost:3003", 
     schemes: ["http"], 
     tags: [ // the sections that will be presented in swagger page 
-        { name: "Users", description: "Endpoints related to users" }, 
+        { name: "Notifications", description: "Endpoints related to notifications" }, 
     ], 
     definitions: { // the objects used in the request and response bodies 
-        GetUser: { // GET response bodies come with id 
+        GetNotification: { // GET response bodies come with id 
             id: 123, 
-            name: "Example Name", 
-            email: "example@mail.com" 
+            user_id: "1", 
+            type: "example type",
+            content: "This is a notification.",
+            createdAt: "2025-11-01T12:34:56.789Z"
         }, 
 
-        CreateUser: { // POST/PUT request bodies are sent without id 
-            name: "Example Name", 
-            email: "example@mail.com" 
+        CreateNotification: { // POST/PUT request bodies are sent without id 
+            user_id: "1", 
+            type: "example type",
+            content: "This is a notification."
         },
 
     } 
