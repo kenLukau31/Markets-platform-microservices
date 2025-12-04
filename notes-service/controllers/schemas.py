@@ -1,11 +1,12 @@
-from pydantic import BaseModel
+from beanie import Document
+from typing import Optional
+from bson import ObjectId
 
-class Notes(BaseModel):
-    id: int
-    user_id: int
+class Notes(Document):
+    user_id: str
     content: str
-    product_seller_id: int
     quantity: int
+    #product_seller_id: Optional[str] = None
 
     class Settings:
-        name = "notes" # MongoDB Collection Name 
+        name = "notes" 
