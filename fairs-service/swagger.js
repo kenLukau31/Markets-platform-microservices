@@ -2,13 +2,13 @@ const swaggerAutogen = require("swagger-autogen")();
 
 const doc = { 
     info: { 
-        title: "Users Service API", 
-        description: "Swagger documentation for Users Microservice", 
+        title: "### Service API", 
+        description: "Swagger documentation for ### Microservice", 
     }, 
     host: "localhost:3000", 
     schemes: ["http"], 
     tags: [ // the sections that will be presented in swagger page 
-        { name: "Users", description: "Endpoints related to users" }, 
+        { name: "###", description: "Endpoints related to ###" }, 
     ], 
     definitions: { // the objects used in the request and response bodies 
         GetUser: { // GET response bodies come with id 

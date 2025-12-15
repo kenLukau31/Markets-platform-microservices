@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 require('dotenv').config({ path: '../.env' });
 
+
 const db = {};
 db.mongoose = mongoose;
 
@@ -17,14 +18,14 @@ db.mongoose = mongoose;
 
         await db.mongoose.connect(mongoDBURL);
         console.log("Connected to the database!");
-
     } catch (error) {
-        
         console.log("❌ Unable to connect to the database:", error);
         process.exit(1);
     }
 })();
 
-db.Notification = require('../model/Notification.js');
+db.User = require('./users.model.js')(mongoose);
+db.Seller = require('./sellers.model.js')(mongoose);
+db.Questionnaire = require('./questionnaires.model.js')(mongoose);
 
 module.exports = db;
