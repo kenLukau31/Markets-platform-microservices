@@ -1,29 +1,101 @@
-const express = require("express");
-const swaggerUi = require("swagger-ui-express"); 
-const swaggerFile = require("../users-service/swagger-output.json"); 
-const jwt = require('jsonwebtoken');
-const pino = require("pino");
+const { ApolloServer } = require('@apollo/server');
+const { startStandaloneServer } = require('@apollo/server/standalone');
+const pino = require('pino');
 require('dotenv').config();
 
-const app = express();
-
+// Logger
 const logger = pino({
   transport: {
     target: "pino-pretty",
-    options: {colorize: true}
+    options: { colorize: true }
   }
-}) 
+});
 
-// Middlewares
-app.use(express.json());
-app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerFile));
+// IMPORTA typeDefs / resolvers
+const typeDefs = require('./schema.js');
+const resolvers = {};
+
+const GRAPHQL_PORT = process.env.GRAPHQL_PORT || 4001;
+
+// Create Apollo Server
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+});
+
+(async () => {
+  const { url } = await startStandaloneServer(server, {
+    listen: { port: GRAPHQL_PORT }
+  });
+
+  logger.info(`GraphQL Fairs Service running at: ${url}`);
+})();
 
 
-// Routes
-const cart_routes = require("./routes/users.routes.js");
-app.use(cart_routes);
 
-// Start server
-const PORT = process.env.PORT || 3000;
-const HOST = process.env.HOST;
-app.listen(PORT, () => logger.info(`Users service running on http://${HOST}:${PORT}/`));
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// const express = require("express");
+// const swaggerUi = require("swagger-ui-express"); 
+// const swaggerFile = require("../users-service/swagger-output.json"); 
+// const jwt = require('jsonwebtoken');
+// const pino = require("pino");
+// const { ApolloServer, gql } = require("apollo-server");
+// require('dotenv').config();
+
+
+// const app = express();
+
+// const logger = pino({
+//   transport: {
+//     target: "pino-pretty",
+//     options: {colorize: true}
+//   }
+// }) 
+
+
+// const GRAPHQL_PORT = process.env.GRAPHQL_PORT || 4001;
+
+// // Create Apollo Server
+// const server = new ApolloServer({
+// typeDefs,
+// resolvers
+// });
+// // Start the server
+// server.listen({ port: GRAPHQL_PORT }).then(({ url }) => {
+// console.log(`GrahpQL Fairs Service server running in ${url}`);
+// });
