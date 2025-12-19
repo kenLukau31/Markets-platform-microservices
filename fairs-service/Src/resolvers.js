@@ -1,5 +1,5 @@
 //db
-import fairs from './config/db.js';
+import fairs from '../config/db.js';
 
 const resolvers = {
     Query: {
