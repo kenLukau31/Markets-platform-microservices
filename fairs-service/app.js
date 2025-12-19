@@ -1,7 +1,11 @@
-const { ApolloServer } = require('@apollo/server');
-const { startStandaloneServer } = require('@apollo/server/standalone');
-const pino = require('pino');
-require('dotenv').config();
+import { ApolloServer } from '@apollo/server';
+import { startStandaloneServer } from '@apollo/server/standalone';
+import pino from 'pino';
+import 'dotenv/config'; 
+
+// IMPORT typeDefs / resolvers
+import typeDefs from './schema.js'; 
+import resolvers from './resolvers.js';
 
 // Logger
 const logger = pino({
@@ -11,9 +15,8 @@ const logger = pino({
   }
 });
 
-// IMPORTA typeDefs / resolvers
-const typeDefs = require('./schema.js');
-const resolvers = {};
+
+
 
 const GRAPHQL_PORT = process.env.GRAPHQL_PORT || 4001;
 
@@ -23,13 +26,12 @@ const server = new ApolloServer({
   resolvers,
 });
 
-(async () => {
+
   const { url } = await startStandaloneServer(server, {
     listen: { port: GRAPHQL_PORT }
   });
 
   logger.info(`GraphQL Fairs Service running at: ${url}`);
-})();
 
 
 
