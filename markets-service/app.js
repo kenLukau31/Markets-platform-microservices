@@ -26,15 +26,15 @@ const testeToken = jwt.sign(
 const server = new ApolloServer({
   typeDefs,
   resolvers,
+  plugins: [logger.loggingPlugin],
 
 });
 
 const { url } = await startStandaloneServer(server, {
   listen: { port: process.env.GRAPHQL_PORT },
   context: async ({ req }) => {
-    logger.info("context - authenticating user...");
     const user = authenticateToken(req);
-    logger.info("User authenticated:", user);
+    // if (user) logger.info(`Request from User: ${user.id}`);
     return { user };
   }
 });

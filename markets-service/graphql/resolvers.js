@@ -7,13 +7,12 @@ import { authorizeRole } from '../middlewares/auth.middleware.js';
 
 const resolvers = {
     Query: {
+        // logger.info("Fetching all markets")
         markets: async () => {
             try {
-
-                logger.info("Fetching all markets from database");
                 return await db.Market.find();
-
             } catch (error) {
+                logger.error(`Failed to fetch markets: ${error.message}`);
                 throw new Error("Error fetching markets");
             }
         },
@@ -34,7 +33,6 @@ const resolvers = {
             try {
                 const requests = market.sellers.map(id => axios.get(`http://localhost:3000/users/sellers/${id}`));
                 const responses = await Promise.all(requests);
-                logger.info(`Fetched ${responses.length} sellers for market ID: ${market._id}`);
                 return responses.map(res => (
                     {
                         id: res.data.id,
@@ -45,7 +43,7 @@ const resolvers = {
 
                     }));
             } catch (error) {
-                logger.error("Error connecting to Users-Service:", error.response?.status || error.message);
+                logger.error(`External Service Error (Users): ${error.message} on market ${market._id}`);
                 return [];
             }
         }
@@ -54,80 +52,80 @@ const resolvers = {
         addMarket: async (_, args, context) => {
             try {
                 authorizeRole(context.user, 'admin');// Only admin can add markets
-                logger.info(`Adding new market...`);
+
+                logger.info(`Admin [${context.user.id}] is creating market: '${args.name}'`);
+
                 const existingMarket = await db.Market.findOne({ name: args.name, address: args.address })
                 if (existingMarket) {
-                    logger.warn(`Validation failed: Market '${args.name}' at '${args.address}' already exists.`);
-                    throw new Error("Market with this name and address already exists.");
+                    logger.warn(`Duplicate creation attempt by [${context.user.id}]: Market '${args.name}' exists.`);
+                    throw new Error("Market already exists.");
                 }
                 const new_market = await new db.Market(args).save();
 
-                logger.info(`Market created successfully with ID: ${new_market._id}`);
+                logger.info(`Market created [ID: ${new_market._id}]`);
                 return new_market;
 
             } catch (error) {
-                logger.error(`Error creating market: ${error.message}`);
+                logger.error(`Create Market Failed: ${error.message}`);
                 throw new Error(`Error creating market: ${error.message}`);
             }
         },
-        updateMarket: async (_, { id, ...args }) => {
+        updateMarket: async (_, { id, ...args },context) => {
             try {
                 authorizeRole(context.user, 'admin');// Only admin can update markets
+                logger.info(`Admin [${context.user.id}] updating market [${id}]`)
+
                 const updatedMarket = await db.Market.findByIdAndUpdate(id, { $set: args }, { new: true });
-                if (!updatedMarket) {
-                    logger.warn(`Market with ID ${id} not found for update.`);
-                    throw new Error(`Market with ID ${id} not found.`);
-                }
+                if (!updatedMarket) throw new Error(`Market not found`);
+
                 logger.info(`Market with ID ${id} updated successfully.`);
                 return updatedMarket;
             } catch (error) {
-                logger.error("Error updating market: " + error.message);
-                throw new Error("Error updating market: " + error.message);
+                logger.error(`Update Market Failed [${id}]: ${error.message}`);
+                throw error;
             }
         },
-        deleteMarket: async (_, { id }) => {
+        deleteMarket: async (_, { id },context) => {
             authorizeRole(context.user, 'admin');// Only admin can delete markets
-            logger.info(`Deleting market with ID: ${id}`);
+            logger.info(`Admin [${context.user.id}] deleting market [${id}]`);
             try {
                 const deletedMarket = await db.Market.findByIdAndDelete(id);
-                if (!deletedMarket) {
-                    logger.info(`Market with ID ${id} not found for deletion.`);
-                    throw new Error(`Market with ID ${id} not found.`);
-                }
+                if (!deletedMarket) throw new Error(`Market not found`);
+        
                 logger.info(`Market with ID ${id} deleted successfully.`);
                 return true;
             } catch (error) {
-                logger.error("Error deleting market: " + error.message);
-                throw new Error("Error deleting market: " + error.message);
+                logger.error(`Delete Market Failed [${id}]: ${error.message}`);
+                throw error;
             }
         },
 
-        addCategoryToMarket: async (_, { marketId, category }) => {
+        addCategoryToMarket: async (_, { marketId, category },context) => {
             try {
                 authorizeRole(context.user, 'admin');// Only admin can modify categories
-                logger.info(`Adding category '${category}' to market ID: ${marketId}`);
+                logger.info(`Admin [${context.user.id}] updating category for market [${marketId}]`);
                 return await db.Market.findByIdAndUpdate(
                     marketId,
                     { $addToSet: { categories: category } },
                     { new: true }
                 );
             } catch (error) {
-                logger.error("Error adding category to market: " + error.message);
-                throw new Error("Error adding category" + error.message);
+                logger.error(`Error adding category to market: ${error.message}`);
+                throw new Error(`Error adding category + ${error.message}`);
             }
         },
-        removeCategoryFromMarket: async (_, { marketId, category }) => {
+        removeCategoryFromMarket: async (_, { marketId, category },context) => {
             try {
                 authorizeRole(context.user, 'admin');// Only admin can modify categories
-                logger.info(`Removing category '${category}' from market ID: ${marketId}`);
+                logger.info(`Admin [${context.user.id}] removing category for market [${marketId}]`);
                 return await db.Market.findByIdAndUpdate(
                     marketId,
                     { $pull: { categories: category } },
                     { new: true }
                 );
             } catch (error) {
-                logger.error("Error removing category from market: " + error.message);
-                throw new Error("Error removing category" + error.message);
+                logger.error(`Error removing category from market: ${error.message}`);
+                throw new Error(`Error removing category + ${error.message}`);
             }
         }
     }
