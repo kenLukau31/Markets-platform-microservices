@@ -1,11 +1,11 @@
-const swaggerAutogen = require("swagger-autogen")(); 
+import swaggerAutogen from "swagger-autogen"; 
 
 const doc = { 
     info: { 
-        title: "Users Service API", 
-        description: "Swagger documentation for Users Microservice", 
+        title: "Ratings Service API", 
+        description: "Swagger documentation for Ratings Microservice",
     }, 
-    host: "localhost:3000", 
+    host: "localhost:3004", 
     schemes: ["http"], 
     tags: [ // the sections that will be presented in swagger page 
         { name: "Users", description: "Endpoints related to users" }, 
