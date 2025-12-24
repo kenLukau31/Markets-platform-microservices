@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 import 'dotenv/config'; 
-import RatingModel from './ratings.model.js';
+import Rating from './ratings.model.js';
 
 
 
@@ -26,5 +26,5 @@ db.mongoose = mongoose;
     }
 })();
 
-db.Rating = RatingModel(mongoose);
+db.Rating = Rating(mongoose);
 export default db;

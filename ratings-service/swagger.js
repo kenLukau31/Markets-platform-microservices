@@ -7,21 +7,32 @@ const doc = {
     }, 
     host: "localhost:3004", 
     schemes: ["http"], 
-    tags: [ // the sections that will be presented in swagger page 
-        { name: "Users", description: "Endpoints related to users" }, 
+    tags: [ 
+       
+        { name: "Ratings", description: "Endpoints related to ratings management" }, 
     ], 
-    definitions: { // the objects used in the request and response bodies 
-        GetUser: { // GET response bodies come with id 
-            id: 123, 
-            name: "Example Name", 
-            email: "example@mail.com" 
-        }, 
-
-        CreateUser: { // POST/PUT request bodies are sent without id 
-            name: "Example Name", 
-            email: "example@mail.com" 
+    definitions: { 
+       
+        CreateRating: { 
+            market_id: "6587f1a2b3c4d5e6f7a8b9c0",
+            rating: 5, 
+            comment: "Excelente feira, produtos muito frescos!" 
         },
 
+        GetRating: { 
+            _id: "6587f1a2b3c4d5e6f7a8b9c0",
+            user_id: "69317c1d009c3bf3f0e6e464",
+            market_id: "6587f1a2b3c4d5e6f7a8b9c0",
+            rating: 5, 
+            comment: "Excelente feira, produtos muito frescos!",
+            createdAt: "2023-12-25T10:00:00.000Z",
+            updatedAt: "2023-12-25T10:00:00.000Z",
+            __v: 0
+        },
+
+        PostRating: {
+            $ref: "#/definitions/GetRating"
+        }
     } 
 }; 
  
