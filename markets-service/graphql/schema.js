@@ -12,7 +12,8 @@ type Market {
     categories: [String!]!   
     
     # Relations
-    sellers: [Seller!]!          
+    sellers: [Seller!]!  
+    averageRating: Float        
     ratings: [Rating!]              
     
   }
@@ -25,9 +26,9 @@ type Market {
   }
   type Rating {
     id: ID!
-    userId: String!
-    marketId: ID!
-    rating: Float!
+    user_id: String!
+    rating: Int!
+    comment: String
   }
   type Query {
     markets: [Market!]!

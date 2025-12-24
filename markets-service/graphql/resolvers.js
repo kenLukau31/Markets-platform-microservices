@@ -48,17 +48,28 @@ const resolvers = {
             }
         },
         //connect to ratings-service to get ratings info
-        ratings: async (rating) => {
-            if (!rating) return null;
+        ratings: async (market) => {
+            if (!market) return null;
             try {
-                const response = await axios.get(`http://localhost:3004/ratings/markets=${rating.id}`);
-                logger.info(`Fetching ratings for market ${rating.id} from external service...`);
-                return response.data;
+                const response = await axios.get(`http://${process.env.HOST}:${process.env.PORT}/ratings/markets=${market.id}`);
+                logger.info(`Fetching ratings for market ${market.id} from external service...`);
+                return response.data.data.marketRatings;
             } catch (error) {
-                logger.error(`External Service Error (Users): ${error.message} on market ${rating.id}`);
+                logger.error(`External Service Error (Users): ${error.message} on market ${market.id}`);
                 return [];
             }
-        }
+        },
+        averageRating: async (market) => {
+            if (!market) return null;
+            try {
+                const response = await axios.get(`http://${process.env.HOST}:${process.env.PORT}/ratings/markets=${market.id}`);
+                logger.info(`Fetching ratings for market ${market.id} from external service...`);
+                return response.data.data.averageRating;
+            } catch (error) {
+                logger.error(`External Service Error (Users): ${error.message} on market ${market.id}`);
+                return 0;
+            }
+        },
     },
     Mutation: {
         addMarket: async (_, args, context) => {

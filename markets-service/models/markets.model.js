@@ -34,7 +34,7 @@ export default (mongoose) => {
         required: [true, 'At least one category is required!'] 
       },
       sellers: { type: [String], default: [] },
-      ratings: [{ userId: String, rating: Number }]
+      //ratings: [{ userId: String, rating: Number }]
     },
     { timestamps: true }
   );
