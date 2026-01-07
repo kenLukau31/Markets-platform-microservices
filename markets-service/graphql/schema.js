@@ -61,6 +61,9 @@ type Market {
     
     addCategoryToMarket(marketId: ID!, category: String!): Market
     removeCategoryFromMarket(marketId: ID!, category: String!): Market
+
+    addSellerToMarket(marketId: ID!, sellerId: ID!): Market
+    removeSellerFromMarket(marketId: ID!, sellerId: ID!): Market
   }
 `;
 

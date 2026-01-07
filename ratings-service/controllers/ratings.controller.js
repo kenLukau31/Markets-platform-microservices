@@ -201,7 +201,7 @@ export const createRating = async (req, res) => {
         //---------------------- VALIDATE MARKET EXISTS ----------------------//
 
         try {
-            const marketCheck = await axios.post(`http://127.0.0.1:4001/`, {
+            const marketCheck = await axios.post(`http://${process.env.HOST}:${process.env.MARKETS_SERVICE_PORT}/`, {
                 query: `
                     query {
                         market(id:"${market_id}") {

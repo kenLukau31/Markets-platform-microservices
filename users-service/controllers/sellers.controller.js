@@ -28,13 +28,13 @@ exports.getSellerById = async (req, res) => {
         //         return res.status(403).json({ error: "You are trying to access someone else's info!"})
         // }
 
-        const seller = await db.Seller.findOne({ user_id: req.params.id })
-            .select("-__v -_id")
+        // const seller = await db.Seller.findOne({ user_id: req.params.id })
+     
+        const seller = await db.Seller.findById(req.params.id) 
+            .select("-__v -_id") 
             .populate({
-
                 path: "user_id",
-                select: 'full_name'
-
+                select: 'full_name email'
             })
             .exec();
 

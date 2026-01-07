@@ -5,6 +5,7 @@ import db from '../models/db.js';
 //auth middleware
 import { authorizeRole } from '../middlewares/auth.middleware.js';
 
+
 const resolvers = {
     Query: {
         // logger.info("Fetching all markets")
@@ -31,18 +32,15 @@ const resolvers = {
         sellers: async (market) => {
             if (!market.sellers || market.sellers.length === 0) return [];
             try {
-                const requests = market.sellers.map(id => axios.get(`http://localhost:3000/users/sellers/${id}`));
+                const requests = market.sellers.map(id => axios.get(`http://${process.env.HOST}:${process.env.USERS_SERVICE_PORT}/users/sellers/${id}`));
                 const responses = await Promise.all(requests);
                 return responses.map(res => (
                     {
-                        id: res.data.id,
-                        full_name: res.data.full_name,
-                        description: res.data.description,
-                        avatar: res.data.avatar,
-                        alert: res.data.alert
-
+                        ...res.data,
+                        id: res.data.id  // Map "id" to "id" for GraphQL schema 
                     }));
             } catch (error) {
+                logger.error(`Failed URL: http://localhost:${process.env.USERS_SERVICE_PORT}/users/sellers/...`);
                 logger.error(`External Service Error (Users): ${error.message} on market ${market._id}`);
                 return [];
             }
@@ -51,29 +49,29 @@ const resolvers = {
         ratings: async (market) => {
             if (!market) return null;
             try {
-                const response = await axios.get(`http://${process.env.HOST}:${process.env.PORT}/ratings/markets/${market.id}`);
+                const response = await axios.get(`http://${process.env.HOST}:${process.env.RATINGS_SERVICE_PORT}/ratings/markets/${market.id}`);
                 logger.info(`Fetching ratings for market ${market.id} from external service...`);
 
                 const ratingsData = response.data.data.marketRatings;
 
                 return ratingsData.map(rating => ({
-                    ...rating,      
+                    ...rating,
                     id: rating._id  // Map "_id" to "id" for GraphQL schema
                 }));
             } catch (error) {
-                logger.error(`External Service Error (Users): ${error.message} on market ${market.id}`);
+                logger.error(`External Service Error (Ratings): ${error.message} on market ${market.id}`);
                 return [];
             }
         },
         averageRating: async (market) => {
             if (!market) return null;
             try {
-                const response = await axios.get(`http://${process.env.HOST}:${process.env.PORT}/ratings/markets/${market.id}`);
+                const response = await axios.get(`http://${process.env.HOST}:${process.env.RATINGS_SERVICE_PORT}/ratings/markets/${market.id}`);
                 logger.info(`Fetching ratings for market ${market.id} from external service...`);
                 return response.data.data.averageRating;
 
             } catch (error) {
-                logger.error(`External Service Error (Users): ${error.message} on market ${market.id}`);
+                logger.error(`External Service Error (Ratings): ${error.message} on market ${market.id}`);
                 return 0;
             }
         },
@@ -136,7 +134,7 @@ const resolvers = {
                 logger.info(`Admin [${context.user.id}] updating category for market [${marketId}]`);
                 return await db.Market.findByIdAndUpdate(
                     marketId,
-                    { $addToSet: { categories: category } },
+                    { $addToSet: { categories: category } },//$addToSet prevent duplicates
                     { new: true }
                 );
             } catch (error) {
@@ -156,6 +154,48 @@ const resolvers = {
             } catch (error) {
                 logger.error(`Error removing category from market: ${error.message}`);
                 throw new Error(`Error removing category + ${error.message}`);
+            }
+        },
+
+        addSellerToMarket: async (_, { marketId, sellerId }, context) => {
+            try {
+                authorizeRole(context.user, 'admin');// Only admin can modify sellers
+                logger.info(`Admin [${context.user.id}] adding seller [${sellerId}] to market [${marketId}]`);
+                try {
+                    await axios.get(`http://${process.env.HOST}:${process.env.USERS_SERVICE_PORT}/users/sellers/${sellerId}`);
+                } catch (err) {
+                    throw new Error("Seller not found in User Service or Service is Down.");
+                }
+                const updatedMarket = await db.Market.findByIdAndUpdate(
+                    marketId,
+                    { $addToSet: { sellers: sellerId } },
+                    { new: true }
+                );
+
+                if (!updatedMarket) throw new Error("Market not found.");
+
+                return updatedMarket;
+            } catch (error) {
+                logger.error(`Error adding seller to market: ${error.message}`);
+                throw new Error(`Error adding seller + ${error.message}`);
+            }
+        },
+        removeSellerFromMarket: async (_, { marketId, sellerId }, context) => {
+            try {
+                authorizeRole(context.user, 'admin');// Only admin can modify sellers
+                logger.info(`Admin [${context.user.id}] removing seller [${sellerId}] from market [${marketId}]`);
+                const updatedMarket = await db.Market.findByIdAndUpdate(
+                    marketId,
+                    { $pull: { sellers: sellerId } },
+                    { new: true }
+                );
+
+                if (!updatedMarket) throw new Error("Market not found.");
+
+                return updatedMarket;
+            } catch (error) {
+                logger.error(`Error removing seller from market: ${error.message}`);
+                throw new Error(`Error removing seller + ${error.message}`);
             }
         }
     }
