@@ -5,7 +5,6 @@ import ratingsRoutes from "./routes/ratings.routes.js";
 import swaggerUi from "swagger-ui-express"; 
 import swaggerFile from "./swagger-output.json" with { type: "json" };
 
-
 const app = express();
 
 // Middlewares
