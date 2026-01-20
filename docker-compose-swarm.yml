@@ -1,17 +1,17 @@
 version: "3.8"
 
 services:
-  mongodb:
-    image: mongo:8
-    ports:
-      - "27017:27017"
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: sic_db_user
-      MONGO_INITDB_ROOT_PASSWORD: sicproject
-    networks:
-      - sic-project-net
-    deploy:
-      replicas: 1
+  # mongodb:
+  #   image: mongo:8
+  #   ports:
+  #     - "27017:27017"
+  #   environment:
+  #     MONGO_INITDB_ROOT_USERNAME: sic_db_user
+  #     MONGO_INITDB_ROOT_PASSWORD: sicproject
+  #   networks:
+  #     - sic-project-net
+  #   deploy:
+  #     replicas: 1
 
   favorites-service:
     image: favorites-service:1.0
@@ -19,6 +19,8 @@ services:
       - "3003:3003"
     networks:
       - sic-project-net
+    environment:
+      - MONGO_URL=mongodb+srv://sic_db_user:sicproject@cluster0.mzx76ay.mongodb.net/?appName=Cluster0
     deploy:
       replicas: 2
 
@@ -26,11 +28,7 @@ services:
     image: markets-service:1.0
     environment:
       - GRAPHQL_PORT=4000
-      - DB_USER=sic_db_user
-      - DB_PASSWORD=sicproject
-      - DB_NAME=sic_db_markets
-      - DB_HOST=sic-project-stack_mongodb
-      - DB_PORT=27017
+      - MONGO_URL=mongodb+srv://sic_db_user:sicproject@cluster0.mzx76ay.mongodb.net/?appName=Cluster0
     networks:
       - sic-project-net
     deploy:
@@ -42,6 +40,8 @@ services:
       - "3005:3005"
     networks:
       - sic-project-net
+    environment:
+      - MONGO_URL=mongodb+srv://sic_db_user:sicproject@cluster0.mzx76ay.mongodb.net/?appName=Cluster0
     deploy:
       replicas: 2
 
@@ -51,6 +51,8 @@ services:
       - "3002:3002"
     networks:
       - sic-project-net
+    environment:
+      - MONGO_URL=mongodb+srv://sic_db_user:sicproject@cluster0.mzx76ay.mongodb.net/?appName=Cluster0
     deploy:
       replicas: 2
   
@@ -60,6 +62,8 @@ services:
       - "3004:3004"
     networks:
       - sic-project-net
+    environment:
+      - MONGO_URL=mongodb+srv://sic_db_user:sicproject@cluster0.mzx76ay.mongodb.net/?appName=Cluster0
     deploy:
       replicas: 2
 
@@ -69,6 +73,8 @@ services:
       - "3000:3000"
     networks:
       - sic-project-net
+    environment:
+      - MONGO_URL=mongodb+srv://sic_db_user:sicproject@cluster0.mzx76ay.mongodb.net/?appName=Cluster0
     deploy:
       replicas: 2
 
@@ -83,5 +89,4 @@ services:
 
 networks:
   sic-project-net:
-    driver: overlay
-    attachable: true
+    external: true

@@ -237,12 +237,12 @@ exports.login = async(req, res) => {
 
         let missingFields = [];
 
-        if (email === undefined) missing_fields.push("Email");
+        if (email === undefined) missingFields.push("Email");
         if (password === undefined) missingFields.push("Password")
         // # --> Check password in DB
 
         let user = await db.User.findOne(
-            {"email": email})
+            {"email": email.toLowerCase()})
             .select("-__v")
             .exec();
 
@@ -267,8 +267,15 @@ exports.login = async(req, res) => {
             accessToken: token
         })
     } catch (err) {
-        logger.error(`Error creating user`)
-        res.status(500).json({ error: "Failed to fetch user"});
+        // logger.error(`Error creating user`)
+        // res.status(500).json({ error: "Failed to fetch user"});
+
+        logger.error(`ERRO CRÍTICO NO LOGIN: ${err.message}`);
+        logger.error(err.stack); 
+        res.status(500).json({ 
+            error: "Failed to fetch user",
+            debug_message: err.message // Remove isto depois de corrigires
+        });
     }
 }
 
