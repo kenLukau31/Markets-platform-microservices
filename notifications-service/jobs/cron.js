@@ -18,7 +18,7 @@ const logger = pino({
 
 
 
-cron.schedule("* * * * *", async () => {
+cron.schedule("0 9 * * *", async () => {
 
     try {
         

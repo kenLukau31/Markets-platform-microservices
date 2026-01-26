@@ -5,14 +5,20 @@ import logger from '../utils/logger.js';
 
 export const authenticateToken = (req) => {
     const authHeader = req.headers["authorization"];
+    console.log("Auth Header recebido:", authHeader);
     const token = authHeader && authHeader.split(" ")[1];
-    if (!token) return null;
+    if (!token) {
+        console.log("Token não encontrado no header.");
+        return null;
+    }
 
     try {
-        return jwt.verify(token, process.env.JWT_SECRET);
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        console.log("Token decodificado com sucesso:", decoded);
+        return decoded;
     } catch (error) {
         logger.warn(`Authentication failed: ${error.message}`);
-        //throw new Error(`Authentication error: ${error.message}`);
+        console.error("Erro na verificação do JWT:", error.message);
         return null;
 
     }
