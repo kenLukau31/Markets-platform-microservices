@@ -1,7 +1,8 @@
 package com.example.favorites;
 
 import org.springframework.beans.factory.annotation.Autowired; 
- 
+import org.springframework.web.reactive.function.client.WebClient;
+
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.bind.annotation.*; 
 import org.springframework.http.ResponseEntity;
@@ -24,71 +25,72 @@ public class FavoriteController {
     // private FavoriteRepository repository;
 
     private final FavoriteRepository repository;
+    private final WebClient webClient;
 
-    public FavoriteController (FavoriteRepository repository) {
+    public FavoriteController (FavoriteRepository repository, WebClient.Builder webClientBuilder) {
         this.repository = repository;
+        this.webClient = webClientBuilder.baseUrl("http://markets-service:4000/graphql").build();
     }
 
     @PostMapping
-    public ResponseEntity<ServiceResponse<Favorite>> createFavorite(@RequestBody Favorite favorite, @RequestHeader("Authorization") String authHeader) {
-        
+    public ResponseEntity<ServiceResponse<Favorite>> createFavorite(
+            @RequestBody Favorite favorite,
+            @RequestHeader("Authorization") String authHeader) {
+
         if (favorite.getTargetId() == null || favorite.getTargetValue() == null || favorite.getUserId() == null) {
-            
-            ServiceResponse<Favorite> res = new ServiceResponse<>("POST Favorite Request: UserId / TargetId / TargetValue fields are missing.",null);
-            return ResponseEntity.badRequest().body(res);
-        }
-
-        String endpoint;
-
-        if (favorite.getTargetValue().equals("seller")) {
-                
-            endpoint = "http://localhost:3000/users/sellers/" + favorite.getTargetId();
-
-        } else if (favorite.getTargetValue().equals("market")) {
-
-            endpoint = "http://localhost:3009/markets/" + favorite.getTargetId();
-
-        } else {
-
-            ServiceResponse<Favorite> res = new ServiceResponse<>("POST Favorite Request: TargetId must be seller or market.",null);
-            return ResponseEntity.badRequest().body(res);
-        }
+            res = new ServiceResponse<>("POST Favorites Request: UserId / TargetId / TargetValue fields are missing.", null);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(res);
         
+        }
+
         try {
+            if (favorite.getTargetValue().equals("seller")) {
+                String endpoint = "http://users-service:3000/users/sellers/" + favorite.getTargetId();
+                RestTemplate restTemplate = new RestTemplate();
+                HttpHeaders headers = new HttpHeaders();
+                headers.set("Authorization", authHeader);
+                HttpEntity<String> entity = new HttpEntity<>(headers);
 
-            RestTemplate restTemp = new RestTemplate();
+                ResponseEntity<String> sellerResponse = restTemplate.exchange(endpoint, HttpMethod.GET, entity, String.class);
+                if (!sellerResponse.getStatusCode().is2xxSuccessful()) {
+                    res = new ServiceResponse<>("POST Favorites Request: Seller not found.", null);
+                    return ResponseEntity.status(HttpStatus.NOT_FOUND).body(res);
+                }
 
-            String token = authHeader.replace("Bearer ", "");
+            } else if (favorite.getTargetValue().equals("market")) {
+                String token = authHeader.replace("Bearer ", "");
+                String queryJson = "{ \"query\": \"{ market(id: \\\"" + favorite.getTargetId() + "\\\") { id } }\" }";
 
-            HttpHeaders headers = new HttpHeaders();
-            headers.set("Authorization", "Bearer " + token);
-            
-            HttpEntity<String> entity = new HttpEntity<>(headers); 
-            
-            ResponseEntity<String> response = restTemp.exchange(
-                endpoint, 
-                HttpMethod.GET, 
-                entity,
-                String.class);
-            
-            if (!response.getStatusCode().equals(HttpStatus.OK)) { 
+                String response = webClient.post()
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+                        .header(HttpHeaders.CONTENT_TYPE, "application/json")
+                        .bodyValue(queryJson)
+                        .retrieve()
+                        .bodyToMono(String.class)
+                        .block();
 
-                ServiceResponse<Favorite> res = new ServiceResponse<>("POST Favorite Request failed." ,null);
-                return ResponseEntity.badRequest().body(res);
-            } 
+                if (response == null || !response.contains(favorite.getTargetId())) {
+                    res = new ServiceResponse<>("POST Favorites Request: Market not found.", null);
+                    return ResponseEntity.status(HttpStatus.NOT_FOUND).body(res);
+                }
+
+            } else {
+                res = new ServiceResponse<>("POST Favorites Request: TargetValue must be 'seller' or 'market'.", null);
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(res);
+        }
+            }
+
+
+
+            Favorite favoriteCreated = repository.save(favorite);
+            res = new ServiceResponse<>("POST Favorites Request: Favorite created successfully.", favoriteCreated);
+            return ResponseEntity.status(HttpStatus.CREATED).body(res);
 
         } catch (Exception e) {
-                
-            ServiceResponse<Favorite> res = new ServiceResponse<>("POST Favorite Request: TargetId not valid.", null);
-            return ResponseEntity.badRequest().body(res);
+            res = new ServiceResponse<>("POST Favorites Request: Failed to create favorite: " + e.getMessage(), null);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(res);
         }
-        
-        Favorite favoriteCreated = repository.save(favorite);
-
-        ServiceResponse<Favorite> res = new ServiceResponse<>("POST Favorite Request was successful.", favoriteCreated);
-        return ResponseEntity.status(HttpStatus.CREATED).body(res);
     }
-
 
     @GetMapping
     public ResponseEntity<ServiceResponse<List<Favorite>>> getAllFavorites() {

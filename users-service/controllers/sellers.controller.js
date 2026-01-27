@@ -8,6 +8,7 @@ const logger = pino({
     }
 })
 
+const mongoose = require('mongoose');
 require('dotenv').config();
 
 // GET a seller by ID
@@ -30,7 +31,9 @@ exports.getSellerById = async (req, res) => {
 
         // const seller = await db.Seller.findOne({ user_id: req.params.id })
      
-        const seller = await db.Seller.findById(req.params.id) 
+        const userId = new mongoose.Types.ObjectId(req.params.id);
+
+        const seller = await db.Seller.findOne({ user_id: userId }) 
             .select("-__v -_id") 
             .populate({
                 path: "user_id",
@@ -39,14 +42,13 @@ exports.getSellerById = async (req, res) => {
             .exec();
 
         if (!seller) {
-            logger.warn(`Seller with ID ${req.params.id} was not found!`);
+            logger.warn(`Seller was not found!`);
             return res.status(404).json({ error: 'Seller not found' });
         }
 
         logger.info(`Seller with user ID ${req.params.id} returned successfully.`)
         return res.status(200).json({
-            // "Seller:": seller
-            id: req.params.id,
+            id: seller.user_id._id,
             full_name: seller.user_id?.full_name,
             email: seller.user_id?.email,
             description: seller.description,

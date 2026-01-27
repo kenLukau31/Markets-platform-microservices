@@ -16,7 +16,7 @@ db.mongoose = mongoose;
             HOST: process.env.DB_HOST
         };
         
-        const mongoDBURL = `mongodb+srv://${config.USER}:${config.PASSWORD}@${config.HOST}/${config.DB}?retryWrites=true&w=majority`;
+        const mongoDBURL =  process.env.MONGO_URL || `mongodb+srv://${config.USER}:${config.PASSWORD}@${config.HOST}/${config.DB}?retryWrites=true&w=majority`;
 
         await db.mongoose.connect(mongoDBURL);
         console.log("Connected to the database!");
